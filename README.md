@@ -40,47 +40,46 @@ Finally, we run the circuit on a local quantum simulator (`AerSimulator`). Becau
 
 ---
 
-## 💻 The Code
-
-Here is the complete Python code for this flow:
-
-```python
-from qiskit import QuantumCircuit
-from qiskit_aer import AerSimulator
-from qiskit.visualization import plot_histogram
-import matplotlib.pyplot as plt
-
-# 1. Initialize 2 Qubits and 2 Classical Bits
-qc = QuantumCircuit(2, 2)
-
-# 2. Apply Hadamard gate to Qubit 0 (Superposition)
-qc.h(0)
-
-# 3. Apply CNOT gate to Qubit 0 and 1 (Entanglement)
-qc.cx(0, 1)
-
-# 4. Measure the qubits
-qc.measure([0, 1], [0, 1])
-
-# Draw the circuit
-print(qc.draw())
-
-# 5. Execute on a local simulator
-simulator = AerSimulator()
-job = simulator.run(qc, shots=1000)
-result = job.result()
-
-# Get the counts (the results of the 1000 shots)
-counts = result.get_counts(qc)
-print("\nTotal counts:", counts)
-
-# Visualize the results
-plot_histogram(counts)
-plt.show()
-```
 
 ## 🚀 How to Run
 
 1. Open the Jupyter Notebook (`.ipynb` file) or Python script.
 2. Run the cells sequentially.
 3. You will see an ASCII drawing of your quantum circuit followed by a pop-up histogram showing the probability distribution of the `00` and `11` states!
+
+
+
+
+# Why Do Quantum Circuits Often Output More 0s than 1s?
+
+When you run a perfectly entangled quantum circuit (like a 2-qubit Bell State or a 3-qubit GHZ State), the math says you should get exactly a **50/50 split** between all `0`s and all `1`s. 
+
+However, when you actually run the code, you might see results like `000` getting 1022 counts and `111` getting 978 counts. Why does `0` seem to win? 
+
+The answer depends on whether you are running a **Simulator** or a **Real Quantum Computer**.
+
+---
+
+## Reason 1: The Math (When using a Simulator)
+If you are using `AerSimulator`, you are using a mathematically "perfect" fake quantum computer. Any imbalance you see here is purely due to **Statistical Variance**.
+
+* **The Coin Flip Analogy:** If you flip a perfectly fair coin 1,000 times, the chance of getting exactly 500 Heads and 500 Tails is incredibly low. You are much more likely to get something like 532 Heads and 468 Tails.
+* **True Randomness:** The simulator relies on true mathematical randomness. If `00` beats `11` three times in a row, it is just a random coincidence. 
+
+**Try this test:** Re-run your simulator cell 5 or 6 times in a row. Eventually, you will see the `11...1` side win! The simulator has no actual preference.
+
+---
+
+## Reason 2: The Physics (When using Real Quantum Hardware)
+If you run this exact same code on a *real* IBM quantum computer, the `00...0` state will almost *always* get higher counts than the `11...1` state. This is not a coincidence; it is actual physics.
+
+* **The "Lazy Universe" Rule:** In quantum physics, the $|0\rangle$ state is the "ground state" (lowest energy). The $|1\rangle$ state is the "excited state" (highest energy).
+* **The Heavy Ball Analogy:** Think of the $|0\rangle$ state like a ball resting comfortably on the floor. Think of the $|1\rangle$ state like holding that heavy ball up in the air. 
+* **Energy Decay (T1 Relaxation):** It takes energy to keep a qubit in the $|1\rangle$ state. Over the tiny fraction of a second it takes to run the circuit, the qubit naturally wants to release its energy and "fall down" to the comfortable $|0\rangle$ state.
+* **Measurement Errors:** Reading quantum states is a messy process. Real quantum sensors are slightly more likely to make a mistake by accidentally reading a `1` as a `0` than the other way around.
+
+---
+
+## Summary
+* **In a Simulator:** It is just the random luck of a coin flip. 
+* **On Real Hardware:** The universe is lazy. Qubits constantly try to lose their energy and fall back down to `0`, causing a natural bias toward `00...0`.
